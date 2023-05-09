@@ -27,7 +27,7 @@ NB_TOKEN = 100
 SPLIT = True
 PIKLE_PATH = 'results/pickle_model_keyword'
 STORE_PIKLE_PATH = 'results/store'
-SUB_SAMPLE_RATE = 1
+SUB_SAMPLE_RATE = 0.1
 
 KEEP_CATGEORIES = ['NI', 'CR', 'CL', 'AI', 'DS', 'CC', 'LO', 'IT']
 
@@ -113,24 +113,34 @@ def vectorize_data(data, vectorizer):
 
     return data_temp
 
+def subsample(data, sample_rate):
+    sample_size = max(int(len(data)*sample_rate), min(100, len(data)))
+    return np.array(random.sample(list(data), sample_size))
+
 # plot the manifold
 # model_name (str): name of the model
 def manifold_plotting(model_name):
     if not os.path.exists(f'{STORE_PIKLE_PATH}_{model_name}.pkl'):
         data = defaultdict(lambda: defaultdict(set))
-        nb_pdf_cat = defaultdict(int)
+        nb_pdf_cat_model = defaultdict(lambda: defaultdict(int))
+        stats = defaultdict(list)
 
         #load hugging face pkls
         split_str = '_split' if SPLIT else ''
         for f in Path(PIKLE_PATH).rglob(f'*_{NB_TOKEN}{split_str}.pkl'):
             with open(f, 'rb') as f_in:
                 category = f.parent.parent.stem
-                if category in KEEP_CATGEORIES and nb_pdf_cat[category] < 100:
-                    nb_pdf_cat[category] += 1
-                    data[f.stem][category].update(pickle.load(f_in))
+                if category in KEEP_CATGEORIES and nb_pdf_cat_model[f.stem][category] < 100:
+                    nb_pdf_cat_model[f.stem][category] += 1
+                    pick_load = pickle.load(f_in)
+                    stats[f.stem].append(len(pick_load))
+                    data[f.stem][category].update(pick_load)
 
         vectorizer = get_vectorizer(model_name)
-        data = vectorize_data(data, vectorizer)        
+        data = vectorize_data(data, vectorizer)
+
+        for k, v in stats.items():
+            print(f'{k}: {np.mean(v)} {np.std(v)}', flush=True)     
         
         store = [data, ]
         file_name = f'{STORE_PIKLE_PATH}_{model_name}.pkl'
@@ -155,17 +165,16 @@ def manifold_plotting(model_name):
         i = 0
         nb_skip = 0
         for k, v in data.items():
-            vects = np.array([x for _, v1 in v.items() for x in v1])
+            vects = np.array([x for _, v1 in v.items() for x in subsample(v1, SUB_SAMPLE_RATE)])
 
             chapter_name = list(v.keys())
-            split_index = list(itertools.accumulate([len(v1) for v1 in v.values()], lambda x, y: x+y))
+            split_index = list(itertools.accumulate([len(subsample(v1, SUB_SAMPLE_RATE)) for v1 in v.values()], lambda x, y: x+y))
             split_range = list(zip([0] + split_index[:-1], split_index))
             ax[i//4, i%4].set_title('\n'.join(wrap(model_name_conversion["_".join(k.split("_")[:-2])], 40)))
             if len(vects) <= 5:
                 nb_skip += 1
                 continue
-            # print(len(vects), np.isnan(vects).all(), np.isfinite(vects).all(), flush=True)
-            if len(vects) > 5000 or not 'non_cuda' in manifold:
+            if len(vects) > 5000000 or not 'non_cuda' in manifold:
                 emb_2d = manifold['model'](**manifold['arg']).fit_transform(vects)
             else:
                 non_cuda_manifold = manifold['non_cuda']
@@ -174,13 +183,13 @@ def manifold_plotting(model_name):
             for cn, (s, e) in zip(chapter_name, split_range):
                 if cn not in KEEP_CATGEORIES:
                     continue
-                sample_size = max(int(len(emb_2d[s:e])*SUB_SAMPLE_RATE), min(100, len(emb_2d[s:e])))
-                subsabmple = np.array(random.sample(list(emb_2d[s:e]), sample_size))
+                # sample_size = max(int(len(emb_2d[s:e])*SUB_SAMPLE_RATE), min(100, len(emb_2d[s:e])))
+                # subsabmple = np.array(random.sample(list(emb_2d[s:e]), sample_size))
 
-                if len(subsabmple) > 0:
-                    ax[i//4, i%4].scatter(*subsabmple.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
-                elif len(emb_2d[s:e]) > 0:
-                    ax[i//4, i%4].scatter(*emb_2d.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
+                # if len(subsabmple) > 0:
+                    # ax[i//4, i%4].scatter(*subsabmple.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
+                if len(emb_2d[s:e]) > 0:
+                    ax[i//4, i%4].scatter(*emb_2d[s:e].T, s=2**2, label=CATEGORIES_TO_NAME[cn])
                 else:
                     continue
 
