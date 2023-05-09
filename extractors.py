@@ -58,7 +58,7 @@ class Extractor(ABC):
     # category (str) default=None: category of the pdf
     # pdf_name (str) default='': name of the pdf
     # remove_score (bool) default=True: if True, remove the score from the keywords
-    def save_result(self, keywords, category=None, pdf_name='', remove_score=True):
+    def save_result(self, keywords, category=None, pdf_name='', remove_score=False):
         if remove_score:
             keywords = [x[0] for x in keywords]
 
@@ -76,7 +76,9 @@ class YakeExtractor(Extractor):
         super().__init__('yake', yake.KeywordExtractor(), nb_tokens, splitlines)
 
     def extract_keywords(self, docs):
-        keywords = self.model.extract_keywords(docs)[:-self.nb_tokens -1:-1]
+        keywords = self.model.extract_keywords(docs)
+        keywords = sorted(keywords, key=lambda x: x[1], reverse=True)[:self.nb_tokens]
+        keywords = [x[0] for x in keywords]
         return keywords
 
 
@@ -130,6 +132,7 @@ class KeyBERTExtractor(Extractor):
     def extract_keywords(self, docs):
         try:
             keywords = self.model.extract_keywords(docs, use_mmr=True, diversity=0.7, vectorizer=self.vectorizer, top_n=self.nb_tokens)
+            keywords = [x[0] for x in keywords]
             return keywords
         except:
             return []

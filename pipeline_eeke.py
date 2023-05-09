@@ -29,8 +29,6 @@ for m in ex.HuggingFaceExtractor.MODEL_NAME:
 for m in ex.SpacyExtractor.MODEL_NAME:
     EXTRACTOR_LIST.append((ex.SpacyExtractor, m))
 
-EXTRACTOR_LIST = [EXTRACTOR_LIST[-1]]
-
 # Class to detect the language of a text with a LLM
 class LanguageDetector:
     def __init__(self):

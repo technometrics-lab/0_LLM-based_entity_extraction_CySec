@@ -136,6 +136,10 @@ def manifold_plotting(model_name):
                     stats[f.stem].append(len(pick_load))
                     data[f.stem][category].update(pick_load)
 
+        for k, v in data.items():
+            words = set([x for v1 in v.values() for x in v1])
+            print(f'{k}: {random.sample(words, min(100, len(words)))}')
+        
         vectorizer = get_vectorizer(model_name)
         data = vectorize_data(data, vectorizer)
 
@@ -161,7 +165,7 @@ def manifold_plotting(model_name):
 
     # calculate the manifold and plot them with different models
     for manifold in tqdm(manifolds, leave=False):
-        fig, ax = plt.subplots(4, 4, figsize=(14, 16))
+        fig, ax = plt.subplots(4, 4, figsize=(13, 12))
         i = 0
         nb_skip = 0
         for k, v in data.items():
@@ -183,12 +187,12 @@ def manifold_plotting(model_name):
             for cn, (s, e) in zip(chapter_name, split_range):
                 if cn not in KEEP_CATGEORIES:
                     continue
-                # sample_size = max(int(len(emb_2d[s:e])*SUB_SAMPLE_RATE), min(100, len(emb_2d[s:e])))
-                # subsabmple = np.array(random.sample(list(emb_2d[s:e]), sample_size))
+                sample_size = max(int(len(emb_2d[s:e])*SUB_SAMPLE_RATE), min(100, len(emb_2d[s:e])))
+                subsabmple = np.array(random.sample(list(emb_2d[s:e]), sample_size))
 
-                # if len(subsabmple) > 0:
-                    # ax[i//4, i%4].scatter(*subsabmple.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
-                if len(emb_2d[s:e]) > 0:
+                if len(subsabmple) > 0:
+                    ax[i//4, i%4].scatter(*subsabmple.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
+                elif len(emb_2d[s:e]) > 0:
                     ax[i//4, i%4].scatter(*emb_2d[s:e].T, s=2**2, label=CATEGORIES_TO_NAME[cn])
                 else:
                     continue
@@ -217,11 +221,11 @@ def manifold_plotting(model_name):
 
         handles, labels = ax[0,0].get_legend_handles_labels()
         fig.suptitle(f'2d manifold with {manifold["name"]} model', fontweight='bold')
-        fig.legend(handles, labels, loc='outside lower center', title='Title: Arxiv listings', ncol=4)
+        fig.legend(handles, labels, loc='outside lower center', title='Title: Arxiv listings', ncol=3, fontsize='18')
         fig.tight_layout()
-        fig.subplots_adjust(top=0.95, bottom=0.08)
+        fig.subplots_adjust(top=0.92, bottom=0.18)
         os.makedirs('results/manifolds', exist_ok=True)
-        plt.savefig(f'results/manifolds/{model_name}_{manifold["name"]}_model.png', dpi=300)
+        plt.savefig(f'results/manifolds/{model_name}_{manifold["name"]}_model.png', dpi=200)
         plt.close()
 
 def main():

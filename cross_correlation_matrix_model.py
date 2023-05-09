@@ -67,6 +67,8 @@ def calculate_correlation(model1, model2):
     sim_chapters = []
     for k in set(model1.keys()).intersection(set(model2.keys())):
         sim_chapters.append(model1[k].similarity(model2[k]))
+    if len(sim_chapters) == 0:
+        return 0
     return sum(sim_chapters)/len(sim_chapters)
 
 # calculate the correlation between each model
