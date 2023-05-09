@@ -9,11 +9,15 @@ from collections import defaultdict
 
 nlp = spacy.load('en_core_web_lg')
 
+# number of token to extract
 NB_TOKEN = 100
+# if the text was split or not
 SPLIT = True
 PIKLE_PATH = 'results/pickle_model_keyword'
-CATEGORY = None
 FILE_NAME_RESULT = 'results/model_correlation_'
+# if a category is specified, only the data for this category will be loaded
+# example: CATEGORY = 'CR'
+CATEGORY = None
 
 #adapt piclke path depending on the category
 if CATEGORY is not None:

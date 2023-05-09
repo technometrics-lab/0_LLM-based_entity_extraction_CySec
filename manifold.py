@@ -21,11 +21,13 @@ import random
 if torch.cuda.is_available():
     import cuml.manifold as cu_manifold
 
+# number of token to extract
 NB_TOKEN = 100
+# if the text was split or not
 SPLIT = True
 PIKLE_PATH = 'results/pickle_model_keyword'
 STORE_PIKLE_PATH = 'results/store'
-SUB_SAMPLE_RATE = 0.6
+SUB_SAMPLE_RATE = 1
 
 KEEP_CATGEORIES = ['NI', 'CR', 'CL', 'AI', 'DS', 'CC', 'LO', 'IT']
 
@@ -113,17 +115,19 @@ def vectorize_data(data, vectorizer):
 
 # plot the manifold
 # model_name (str): name of the model
-def manifold(model_name):
+def manifold_plotting(model_name):
     if not os.path.exists(f'{STORE_PIKLE_PATH}_{model_name}.pkl'):
-        data = defaultdict(lambda: defaultdict(list))
+        data = defaultdict(lambda: defaultdict(set))
+        nb_pdf_cat = defaultdict(int)
 
         #load hugging face pkls
         split_str = '_split' if SPLIT else ''
         for f in Path(PIKLE_PATH).rglob(f'*_{NB_TOKEN}{split_str}.pkl'):
             with open(f, 'rb') as f_in:
                 category = f.parent.parent.stem
-                if category in KEEP_CATGEORIES:
-                    data[f.stem][category].extend(pickle.load(f_in))
+                if category in KEEP_CATGEORIES and nb_pdf_cat[category] < 100:
+                    nb_pdf_cat[category] += 1
+                    data[f.stem][category].update(pickle.load(f_in))
 
         vectorizer = get_vectorizer(model_name)
         data = vectorize_data(data, vectorizer)        
@@ -141,15 +145,15 @@ def manifold(model_name):
     del store
 
     if torch.cuda.is_available():
-        manifolds = [{'model':cu_manifold.TSNE, 'name': 'tsne', 'arg':{'perplexity': 5}}, {'model':cu_manifold.UMAP, 'name': 'umap', 'arg':{}}, {'model':SpectralEmbedding, 'name': 'spectral', 'arg':{}}, {'model':LocallyLinearEmbedding, 'name': 'linear', 'arg':{'eigen_solver': 'dense'}}]
+        manifolds = [{'model':cu_manifold.TSNE, 'name': 'tsne', 'arg':{'perplexity': 5}, 'non_cuda': {'model':TSNE, 'name': 'tsne', 'arg':{'perplexity': 4}}}, {'model':cu_manifold.UMAP, 'name': 'umap', 'arg':{}, 'non_cuda': {'model':umap.UMAP, 'name': 'umap', 'arg':{}}}, {'model':SpectralEmbedding, 'name': 'spectral', 'arg':{}}, {'model':LocallyLinearEmbedding, 'name': 'linear', 'arg':{'eigen_solver': 'dense'}}]
     else:
-        manifolds = [{'model':SpectralEmbedding, 'name': 'spectral', 'arg':{}}, {'model':umap.UMAP, 'name': 'umap', 'arg':{}}, {'model':LocallyLinearEmbedding, 'name': 'linear', 'arg':{'eigen_solver': 'dense'}}, {'model':TSNE, 'name': 'tsne', 'arg':{'perplexity': 4}}]
+        manifolds = [{'model':TSNE, 'name': 'tsne', 'arg':{'perplexity': 4}}, {'model':umap.UMAP, 'name': 'umap', 'arg':{}}, {'model':SpectralEmbedding, 'name': 'spectral', 'arg':{}}, {'model':LocallyLinearEmbedding, 'name': 'linear', 'arg':{'eigen_solver': 'dense'}}]
 
     # calculate the manifold and plot them with different models
-    nb_skip = 0
-    for manifold in tqdm([manifolds[0]], leave=False):
-        fig, ax = plt.subplots(4, 4, figsize=(25, 20))
+    for manifold in tqdm(manifolds, leave=False):
+        fig, ax = plt.subplots(4, 4, figsize=(14, 16))
         i = 0
+        nb_skip = 0
         for k, v in data.items():
             vects = np.array([x for _, v1 in v.items() for x in v1])
 
@@ -157,31 +161,39 @@ def manifold(model_name):
             split_index = list(itertools.accumulate([len(v1) for v1 in v.values()], lambda x, y: x+y))
             split_range = list(zip([0] + split_index[:-1], split_index))
             ax[i//4, i%4].set_title('\n'.join(wrap(model_name_conversion["_".join(k.split("_")[:-2])], 40)))
-            if len(vects) < 4:
+            if len(vects) <= 5:
                 nb_skip += 1
                 continue
-
-            emb_2d = manifold['model'](**manifold['arg']).fit_transform(vects)
+            # print(len(vects), np.isnan(vects).all(), np.isfinite(vects).all(), flush=True)
+            if len(vects) > 5000 or not 'non_cuda' in manifold:
+                emb_2d = manifold['model'](**manifold['arg']).fit_transform(vects)
+            else:
+                non_cuda_manifold = manifold['non_cuda']
+                emb_2d = non_cuda_manifold['model'](**non_cuda_manifold['arg']).fit_transform(vects)
 
             for cn, (s, e) in zip(chapter_name, split_range):
                 if cn not in KEEP_CATGEORIES:
                     continue
-                subsabmple = np.array(random.sample(list(emb_2d[s:e]), int(len(emb_2d[s:e])*SUB_SAMPLE_RATE)))
+                sample_size = max(int(len(emb_2d[s:e])*SUB_SAMPLE_RATE), min(100, len(emb_2d[s:e])))
+                subsabmple = np.array(random.sample(list(emb_2d[s:e]), sample_size))
+
                 if len(subsabmple) > 0:
                     ax[i//4, i%4].scatter(*subsabmple.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
                 elif len(emb_2d[s:e]) > 0:
                     ax[i//4, i%4].scatter(*emb_2d.T, s=2**2, label=CATEGORIES_TO_NAME[cn])
+                else:
+                    continue
 
             # remove outliers
-            ypbot = np.nanpercentile(emb_2d.T[1, :], 1)
-            yptop = np.nanpercentile(emb_2d.T[1, :], 99)
-            ypad = 0.2*(yptop - ypbot)
+            ypbot = np.nanpercentile(emb_2d.T[1, :], 5)
+            yptop = np.nanpercentile(emb_2d.T[1, :], 95)
+            ypad = 0.1*(yptop - ypbot)
             ymin = ypbot - ypad
             ymax = yptop + ypad
 
-            xpbot = np.nanpercentile(emb_2d.T[0, :], 1)
-            xptop = np.nanpercentile(emb_2d.T[0, :], 99)
-            xpad = 0.2*(xptop - xpbot)
+            xpbot = np.nanpercentile(emb_2d.T[0, :], 5)
+            xptop = np.nanpercentile(emb_2d.T[0, :], 95)
+            xpad = 0.1*(xptop - xpbot)
             xmin = xpbot - xpad
             xmax = xptop + xpad
 
@@ -195,10 +207,10 @@ def manifold(model_name):
             ax[i//4, i%4].set_axis_off()
 
         handles, labels = ax[0,0].get_legend_handles_labels()
-        fig.suptitle(f'2d embedding with {manifold["name"]} model', fontweight='bold')
-        fig.legend(handles, labels, loc='outside center right', title='Title: Arxiv listings')
+        fig.suptitle(f'2d manifold with {manifold["name"]} model', fontweight='bold')
+        fig.legend(handles, labels, loc='outside lower center', title='Title: Arxiv listings', ncol=4)
         fig.tight_layout()
-        fig.subplots_adjust(top=0.92, right=0.85)
+        fig.subplots_adjust(top=0.95, bottom=0.08)
         os.makedirs('results/manifolds', exist_ok=True)
         plt.savefig(f'results/manifolds/{model_name}_{manifold["name"]}_model.png', dpi=300)
         plt.close()
@@ -211,7 +223,7 @@ def main():
     #     [t.result() for t in tasks]
     # print('***** DONE *****', flush=True)
     for model_name in tqdm((list_model_spacy + list_model_gpt + list_model_bert + list_model_gensim)):
-        manifold(model_name)
+        manifold_plotting(model_name)
 
 if __name__ == '__main__':
     main()

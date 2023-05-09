@@ -9,8 +9,9 @@ import os
 import extractors as ex
 
 PDF_PATH = '/data'
-
+# number of token to extract
 NB_TOKENS = 100
+# Split the text in multiple part to extract the keywords
 SPLIT = True
 NB_PROCESS = 8
 

@@ -24,7 +24,8 @@ To plot the cross correlation of the models
 
 ## Remarks
 
-When using the scripts on large data can have some issue with the scripts. For example: Take too long, use too much memory, ...
+- When using the scripts on large data, you can have some issue with the scripts. For example: Take too long, use too much memory, ...
+- There are constant on top of the files to edit some parameters of the scripts.
 
 ## Requirements
 
