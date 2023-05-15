@@ -7,6 +7,7 @@ keyphrase-vectorizers==0.0.11
 keyphrasetransformer==0.0.2
 lsg-converter==0.0.5
 matplotlib==3.7.1
+protobuf==3.20.0
 PyMuPDF==1.22.2
 scikit-learn==1.2.2
 seaborn==0.12.2

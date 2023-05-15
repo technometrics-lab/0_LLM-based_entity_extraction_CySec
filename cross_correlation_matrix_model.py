@@ -1,105 +1,142 @@
-from pathlib import Path
+import json
 import pickle
+from pathlib import Path
+from collections import defaultdict
+
 import spacy
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from collections import defaultdict
+from tqdm import tqdm
 
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load("en_core_web_lg")
 
-# number of token to extract
-NB_TOKEN = 100
-# if the text was split or not
-SPLIT = True
-PIKLE_PATH = 'results/pickle_model_keyword'
-FILE_NAME_RESULT = 'results/model_correlation_'
-# if a category is specified, only the data for this category will be loaded
-# example: CATEGORY = 'CR'
-CATEGORY = None
+CONFIG = json.load(open("config.json", "r"))
 
-#adapt piclke path depending on the category
-if CATEGORY is not None:
-    PIKLE_PATH = f'{PIKLE_PATH}/{CATEGORY}'
+# adapt piclke path depending on the category
+if CONFIG["CROSS_CORRELATION"]["CATEGORY"] != "":
+    CONFIG[
+        "PICKLE_PATH"
+    ] = f"{CONFIG['PICKLE_PATH']}/{CONFIG['CROSS_CORRELATION']['CATEGORY']}"
 
-# Readable model name conversion
-model_name = {
-    'yake': 'Yake',
-    'hugging_bhadresh-savani_electra-base-discriminator-finetuned-conll03-english': 'Electra',
-    'hugging_asahi417_tner-xlm-roberta-base-ontonotes5': 'XLM-Roberta-base',
-    'hugging_browndw_docusco-bert': 'BERT',
-    'keybert': 'KeyBERT',
-    'hugging_Jean-Baptiste_roberta-large-ner-english': 'Roberta',
-    'hugging_yanekyuk_bert-uncased-keyword-extractor': 'BERT uncased extractor',
-    'hugging_dslim_bert-large-NER': 'Bert-large',
-    'hugging_xlm-roberta-large-finetuned-conll03-english': 'XLM-Roberta-large',
-    'hugging_elastic_distilbert-base-uncased-finetuned-conll03-english': 'DistilBert uncased',
-    'hugging_yanekyuk_bert-uncased-keyword-discriminator': 'BERT uncased discriminator',
-    'hugging_Jorgeutd_bert-large-uncased-finetuned-ner': 'BERT large uncased',
-    'hugging_ml6team_keyphrase-extraction-kbir-kpcrowd': 'kbir-kpcrowd',
-    'en_core_web_trf': 'Spacy Transformer',
-    'en_core_web_lg': 'Spacy Large',
-    'hugging_ml6team_keyphrase-extraction-kbir-inspec': 'kbir-inspec',
-}
 
-data = defaultdict(dict)
+def load_keywords_pickles() -> dict:
+    """Load the keywords from the pickle files
 
-#load hugging face pkls
-split_str = '_split' if SPLIT else ''
-for f in Path(PIKLE_PATH).rglob(f'*_{NB_TOKEN}{split_str}.pkl'):
-    with open(f, 'rb') as f_in:
-        data[f.stem][f.parent.stem] = pickle.load(f_in)
+    Returns:
+        dict (dict[{model_name: {category: list}}]): dict with the keywords for each model
+    """
+    data = defaultdict(dict)
+    split_str = "_split" if CONFIG["SPLIT"] else ""
 
-#calculate the vector embedding for each model
-vect_data = {}
-for k,v in tqdm(data.items()):
-    vect_model = {}
-    for k2,v2 in tqdm(v.items(), leave=False):
-        vect_model[k2] = nlp(' '.join(v2))
-    vect_data[k] = vect_model
+    for pikle_file in Path(CONFIG["PICKLE_PATH"]).rglob(
+        f"*_{CONFIG['NB_TOKENS']}{split_str}.pkl"
+    ):
+        with open(pikle_file, "rb") as f_in:
+            data[pikle_file.stem][pikle_file.parent.stem] = pickle.load(f_in)
 
-# calculate the correlation between two models
-# calculate the average similarity between each pdf
-# model1: vector embedding of each tocken for model 1
-# model2: vector embedding of each tocken for model 2
-def calculate_correlation(model1, model2):
+    return data
+
+
+def caculate_vector_embedding(data: dict) -> dict:
+    """Calculate the vector embedding for each model
+
+    Parameters:
+        data (dict): dict with the keywords for each model
+
+    Returns:
+        dict (dict[{model_name: {category: list}}]): dict with the vector embedding for each model
+    """
+    vect_data = {}
+    for extractor_name, keywords_per_cat in tqdm(data.items()):
+        vect_model = {}
+        for cat, keywords in tqdm(keywords_per_cat.items(), leave=False):
+            vect_model[cat] = nlp(" ".join(keywords))
+        vect_data[extractor_name] = vect_model
+    return vect_data
+
+
+def calculate_correlation(model1: dict, model2: dict) -> float:
+    """Calculate the correlation between two models by by calculating the average similarity between each pdf
+
+    Parameters:
+        model1 (dict): vector embedding of each token for model 1
+        model2 (dict): vector embedding of each token for model 2
+
+    Returns:
+        float: correlation between the two models
+    """
     sim_chapters = []
-    for k in set(model1.keys()).intersection(set(model2.keys())):
-        sim_chapters.append(model1[k].similarity(model2[k]))
+    for chapter_name in set(model1.keys()).intersection(set(model2.keys())):
+        sim_chapters.append(model1[chapter_name].similarity(model2[chapter_name]))
     if len(sim_chapters) == 0:
         return 0
-    return sum(sim_chapters)/len(sim_chapters)
+    return sum(sim_chapters) / len(sim_chapters)
 
-# calculate the correlation between each model
-# data: vector embedding of each tocken for each model
-def calculate_correlation_matrix(data):
+
+def calculate_correlation_matrix(data: dict) -> list[list[float]]:
+    """Calculate the correlation matrix between each model
+
+    Parameters:
+        data (dict): dict with the vector embedding for each model
+
+    Returns:
+        list[list[float]]: correlation matrix between each model"""
     matrix = []
-    for _,v1 in data.items():
+    for _, keywords_per_cat_1 in data.items():
         row = []
-        for _,v2 in data.items():
-            row.append(calculate_correlation(v1, v2))
+        for _, keywords_per_cat_2 in data.items():
+            row.append(calculate_correlation(keywords_per_cat_1, keywords_per_cat_2))
         matrix.append(row)
     return matrix
 
-# calculate the correlation matrix
-corr_matrix = calculate_correlation_matrix(vect_data)
-corr_matrix = np.array(corr_matrix)
 
 # plot the correlation matrix
-mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
-labels = [model_name["_".join(l.split("_")[:-2])] for l in vect_data.keys()]
-g = sns.clustermap(corr_matrix, cmap='viridis', square=True, linewidths=.5, cbar_kws={"shrink": .5}, yticklabels=labels, xticklabels=labels, cbar_pos=(0.03, 0.03, 0.04, 0.15))
+def plot_correlation_matrix(corr_matrix: list[list[float]], labels):
+    g = sns.clustermap(
+        corr_matrix,
+        cmap="viridis",
+        square=True,
+        linewidths=0.5,
+        cbar_kws={"shrink": 0.5},
+        yticklabels=labels,
+        xticklabels=labels,
+        cbar_pos=(0.03, 0.03, 0.04, 0.15),
+    )
 
-mask = np.triu(np.ones_like(corr_matrix))
-values = g.ax_heatmap.collections[0].get_array().reshape(corr_matrix.shape)
-new_values = np.ma.array(values, mask=mask)
-g.ax_heatmap.collections[0].set_array(new_values)
-g.ax_col_dendrogram.set_visible(False)
-g.ax_heatmap.set_title(f"Similarity of keywords extracted from cs.{CATEGORY if CATEGORY is not None else 'XX'}")
+    mask = np.triu(np.ones_like(corr_matrix))
+    values = g.ax_heatmap.collections[0].get_array().reshape(corr_matrix.shape)
+    new_values = np.ma.array(values, mask=mask)
+    g.ax_heatmap.collections[0].set_array(new_values)
+    g.ax_col_dendrogram.set_visible(False)
+    g.ax_heatmap.set_title(
+        f"Similarity of keywords extracted from cs.{CONFIG['CROSS_CORRELATION']['CATEGORY'] if CONFIG['CROSS_CORRELATION']['CATEGORY'] != '' else 'XX'}"
+    )
 
-plt.subplots_adjust(top=1.12)
-g.ax_cbar.set_position([0.03, 0.03, 0.06, 0.15])
+    plt.subplots_adjust(top=1.12)
+    g.ax_cbar.set_position([0.03, 0.03, 0.06, 0.15])
 
-cat_str = f'_{CATEGORY}' if CATEGORY is not None else ''
-plt.savefig(f'{FILE_NAME_RESULT}{cat_str}.png')
+    cat_str = (
+        f"_{CONFIG['CROSS_CORRELATION']['CATEGORY']}"
+        if CONFIG["CROSS_CORRELATION"]["CATEGORY"] != ""
+        else ""
+    )
+    plt.savefig(f"{CONFIG['CROSS_CORRELATION']['FILE_NAME_RESULT']}{cat_str}.png")
+
+
+def main():
+    data = load_keywords_pickles()
+    vect_data = caculate_vector_embedding(data)
+
+    corr_matrix = calculate_correlation_matrix(vect_data)
+    corr_matrix = np.array(corr_matrix)
+
+    labels = [
+        CONFIG["MODEL_NAME_TO_TEXT"]["_".join(l.split("_")[:-2])]
+        for l in vect_data.keys()
+    ]
+    plot_correlation_matrix(corr_matrix, labels)
+
+
+if __name__ == "__main__":
+    main()
