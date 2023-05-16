@@ -1,5 +1,4 @@
 import os
-import json
 import pickle
 from collections import Counter
 from abc import ABC, abstractmethod
@@ -80,7 +79,7 @@ class Extractor(ABC):
             remove_score (bool) default=True: if True, remove the score from the keywords
         """
         if remove_score:
-            keywords = [x[0] for x in keywords]
+            keywords = [word[0] for word in keywords]
 
         file_name = self.get_file_name(category, pdf_name)
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -96,13 +95,15 @@ class YakeExtractor(Extractor):
 
     def __init__(self, pickle_path, nb_tokens, splitlines):
         """Init the extractor
-        
+
         Parameters:
             pickle_path (str): path where to save the result
             nb_tokens (int): number of keywords to extract
             splitlines (bool): if True, split the text into lines before extracting keywords
         """
-        super().__init__("yake", yake.KeywordExtractor(), pickle_path, nb_tokens, splitlines)
+        super().__init__(
+            "yake", yake.KeywordExtractor(), pickle_path, nb_tokens, splitlines
+        )
 
     def extract_keywords(self, doc):
         keywords = self.model.extract_keywords(doc)
@@ -115,7 +116,7 @@ class YakeExtractor(Extractor):
 #     """BERTopic extractor extends Extractor class"""
 #     def __init__(self, pickle_path, nb_tokens, splitlines):
 #         """Init the extractor
-#         
+#
 #         Parameters:
 #             pickle_path (str): path where to save the result
 #             nb_tokens (int): number of keywords to extract
@@ -169,10 +170,15 @@ class KeyBERTExtractor(Extractor):
     ]
 
     def __init__(
-        self, pickle_path, nb_tokens, splitlines, model="keyphrase", spacy_removal=SPACY_REMOVAL
+        self,
+        pickle_path,
+        nb_tokens,
+        splitlines,
+        model="keyphrase",
+        spacy_removal=SPACY_REMOVAL,
     ):
         """Init the extractor
-        
+
         Parameters:
             pickle_path (str): path where to save the result
             nb_tokens (int): number of keywords to extract
@@ -218,7 +224,7 @@ class KeyBERTExtractor(Extractor):
             )
             keywords = [x[0] for x in keywords]
             return keywords
-        except:
+        except Exception:
             return []
 
 
@@ -227,13 +233,15 @@ class KeyPhraseExtractor(Extractor):
 
     def __init__(self, pickle_path, nb_tokens, splitlines):
         """Init the extractor
-        
+
         Parameters:
             pickle_path (str): path where to save the result
             nb_tokens (int): number of keywords to extract
             splitlines (bool): if True, split the text into lines before extracting keywords
         """
-        super().__init__("keyphrase", KeyPhraseTransformer(), pickle_path, nb_tokens, splitlines)
+        super().__init__(
+            "keyphrase", KeyPhraseTransformer(), pickle_path, nb_tokens, splitlines
+        )
 
     def extract_keywords(self, doc):
         keywords = self.model.get_key_phrases(doc)[: self.nb_tokens]
@@ -269,7 +277,7 @@ class HuggingFaceExtractor(Extractor):
     # is_lsg (bool) default=False: if True, use the lsg_converter to convert the model to a lsg model
     def __init__(self, model_name, pickle_path, nb_tokens, splitlines, is_lsg=False):
         """Init the extractor
-        
+
         Parameters:
             model_name (str): name of the model to use. See MODEL_NAMES for available models
             pickle_path (str): path where to save the result
@@ -310,7 +318,7 @@ class HuggingFaceExtractor(Extractor):
                     device=device,
                 )
                 break
-            except Exception as e:
+            except Exception:
                 # print(e)
                 continue
 
@@ -374,15 +382,15 @@ class HuggingFaceExtractor(Extractor):
                     if self.lsg_model is not None:
                         try:
                             results.extend(self.lsg_model(doc_split))
-                        except:
+                        except Exception:
                             continue
 
         return list(
             set(
                 [
-                    x["word"]
-                    for x in sorted(results, key=lambda x: x["score"], reverse=True)
-                    if len(x["word"]) > 1
+                    word["word"]
+                    for word in sorted(results, key=lambda x: x["score"], reverse=True)
+                    if len(word["word"]) > 1
                 ]
             )
         )[: self.nb_tokens]
@@ -398,7 +406,7 @@ class SpacyExtractor(Extractor):
 
     def __init__(self, model_name, pickle_path, nb_tokens, splitlines):
         """Init the extractor
-        
+
         Parameters:
             model_name (str): name of the model to use. See MODEL_NAMES for available models
             pickle_path (str): path where to save the result
@@ -413,7 +421,7 @@ class SpacyExtractor(Extractor):
 
     def extract_keywords(self, doc):
         results = []
-        if doc is not None:  # and docs.strip() !='':
+        if doc is not None:
             if len(doc) > 1000:
                 for i in range(0, len(doc), 1000):
                     results.extend(self.model(doc[i : i + 1000].lower()))

@@ -27,8 +27,8 @@ for model_name in ex.HuggingFaceExtractor.MODEL_NAMES:
 for model_name in ex.SpacyExtractor.MODEL_NAMES:
     EXTRACTOR_LIST.append((ex.SpacyExtractor, model_name))
 
-#TODO remove next line
-EXTRACTOR_LIST = EXTRACTOR_LIST[3:4]
+EXTRACTOR_LIST = EXTRACTOR_LIST[:1]
+
 
 class LanguageDetector:
 
@@ -41,7 +41,9 @@ class LanguageDetector:
             torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         )
         self.tokenizer = AutoTokenizer.from_pretrained(self.language_model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(self.language_model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.language_model_name
+        )
         self.classifier = pipeline(
             "sentiment-analysis",
             model=self.model,
@@ -93,7 +95,7 @@ def get_all_pdf_from_dir(path: str) -> list[Path]:
     Return:
         pdf_list (list[Path]): list of Path to the pdf files
     """
-    return [x for x in Path(path).rglob("*.pdf")]
+    return list(Path(path).rglob("*.pdf"))
 
 
 def get_category(text: str) -> str:
@@ -151,9 +153,13 @@ def worker(model_info: tuple, pdf_list: list[Path]):
     # load the language detector and the keyword extractor
     language_detector = LanguageDetector()
     if len(model_info) == 2:
-        model = model_info[0](model_info[1], CONFIG["PICKLE_PATH"], CONFIG["NB_TOKENS"], CONFIG["SPLIT"])
+        model = model_info[0](
+            model_info[1], CONFIG["PICKLE_PATH"], CONFIG["NB_TOKENS"], CONFIG["SPLIT"]
+        )
     else:
-        model = model_info[0](CONFIG["PICKLE_PATH"], CONFIG["NB_TOKENS"], CONFIG["SPLIT"])
+        model = model_info[0](
+            CONFIG["PICKLE_PATH"], CONFIG["NB_TOKENS"], CONFIG["SPLIT"]
+        )
 
     i = 0
     print(f"start {str(model)}", flush=True)

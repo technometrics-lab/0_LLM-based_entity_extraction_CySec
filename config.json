@@ -1,0 +1,47 @@
+{
+    "PDF_PATH": "data/",
+    "NB_TOKENS": 100,
+    "SPLIT": "True",
+    "NB_PROCESS": 1,
+    "PICKLE_PATH": "results/pickle_model_keyword",
+
+    "CROSS_CORRELATION": {
+        "FILE_NAME_RESULT": "results/model_correlation_",
+        "CATEGORY": "CR"
+    },
+
+    "MANIFOLD": {
+        "STORE_PICKLE_PATH": "results/pickle_manifold/store",
+        "SUB_SAMPLE_RATE": 0.1,
+
+        "CATEGORIES_TO_NAME": {
+            "NI": "Network and Internet Architecture: cs.NI",
+            "CR": "Cryptography and Security: cs.CR",
+            "CL": "Computation and Language: cs.CL",
+            "AI": "Artificial Intelligence: cs.AI",
+            "DS": "Data Structures and Algorithms: cs.DS",
+            "CC": "Computational Complexity: cs.CC",
+            "LO": "Logic in Computer Science: cs.LO",
+            "IT": "Information Theory: cs.IT"
+        }
+    },
+
+    "MODEL_NAME_TO_TEXT": {
+        "yake": "Yake",
+        "hugging_bhadresh-savani_electra-base-discriminator-finetuned-conll03-english": "Electra",
+        "hugging_asahi417_tner-xlm-roberta-base-ontonotes5": "XLM-Roberta-base",
+        "hugging_browndw_docusco-bert": "BERT",
+        "keybert": "KeyBERT",
+        "hugging_Jean-Baptiste_roberta-large-ner-english": "Roberta",
+        "hugging_yanekyuk_bert-uncased-keyword-extractor": "BERT uncased extractor",
+        "hugging_dslim_bert-large-NER": "Bert-large",
+        "hugging_xlm-roberta-large-finetuned-conll03-english": "XLM-Roberta-large",
+        "hugging_elastic_distilbert-base-uncased-finetuned-conll03-english": "DistilBert uncased",
+        "hugging_yanekyuk_bert-uncased-keyword-discriminator": "BERT uncased discriminator",
+        "hugging_Jorgeutd_bert-large-uncased-finetuned-ner": "BERT large uncased",
+        "hugging_ml6team_keyphrase-extraction-kbir-kpcrowd": "kbir-kpcrowd",
+        "en_core_web_trf": "Spacy Transformer",
+        "en_core_web_lg": "Spacy Large",
+        "hugging_ml6team_keyphrase-extraction-kbir-inspec": "kbir-inspec"
+    }
+}

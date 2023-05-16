@@ -13,7 +13,7 @@ nlp = spacy.load("en_core_web_lg")
 
 CONFIG = json.load(open("config.json", "r"))
 
-# adapt piclke path depending on the category
+# adapt pickle path depending on the category
 if CONFIG["CROSS_CORRELATION"]["CATEGORY"] != "":
     CONFIG[
         "PICKLE_PATH"
@@ -93,6 +93,12 @@ def calculate_correlation_matrix(data: dict) -> list[list[float]]:
 
 # plot the correlation matrix
 def plot_correlation_matrix(corr_matrix: list[list[float]], labels):
+    """Plot the correlation matrix and save it
+
+    Parameters:
+        corr_matrix (list[list[float]]): correlation matrix between each model
+        labels (list[str]): list of the model names
+    """
     g = sns.clustermap(
         corr_matrix,
         cmap="viridis",
@@ -125,6 +131,7 @@ def plot_correlation_matrix(corr_matrix: list[list[float]], labels):
 
 
 def main():
+    """Create a hierarchical clustering of the different extractors based on the similarity of the keywords they extract"""
     data = load_keywords_pickles()
     vect_data = caculate_vector_embedding(data)
 
