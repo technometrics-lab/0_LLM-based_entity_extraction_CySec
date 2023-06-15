@@ -30,3 +30,22 @@ To plot the cross correlation of the models
 ## Requirements
 
 - Python3.10
+
+## Model name
+
+- Yake (KPE): https://pypi.org/project/yake/
+- KeyBERT (KPE): https://pypi.org/project/keybert/p
+- Electra-base conll03 (NER): https://huggingface.co/bhadresh-savani/electra-base-discriminator-finetuned-conll03-english
+- XLM-RoBERTa-base OntoNotes5 (NER + NUM): https://huggingface.co/asahi417/tner-xlm-roberta-base-ontonotes5
+- BERT COCA-docusco (TokC): https://huggingface.co/browndw/docusco-bert
+- BERT-large-cased conll03 (NER): https://huggingface.co/dslim/bert-large-NER
+- DistilBERT-base-uncased conll03 (NER): https://huggingface.co/elastic/distilbert-base-uncased-finetuned-conll03-english
+- RoBERTa-large conll03 (NER): https://huggingface.co/Jean-Baptiste/roberta-large-ner-english
+- BERT-large-uncased conll03 (NER): https://huggingface.co/Jorgeutd/bert-large-uncased-finetuned-ner
+- KBIR inspec (KPE): https://huggingface.co/ml6team/keyphrase-extraction-kbir-inspec
+- KBIR kpcrowd (KPE): https://huggingface.co/ml6team/keyphrase-extraction-kbir-kpcrowd
+- XLM-RoBERTa-large conll03 (NER): https://huggingface.co/xlm-roberta-large-finetuned-conll03-english
+- BERT-base-uncased (NER + CON R): https://huggingface.co/yanekyuk/bert-uncased-keyword-discriminator
+- BERT-base-uncased (KPE): https://huggingface.co/yanekyuk/bert-uncased-keyword-extractor
+- Spacy-large OntoNotes5 (NnE): https://pypi.org/project/spacy/
+- Spacy-transformer OntoNotes5 (NnE): https://pypi.org/project/spacy/hu

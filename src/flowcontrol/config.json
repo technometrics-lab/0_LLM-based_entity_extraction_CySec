@@ -1,0 +1,89 @@
+{
+    "PDF_PATH": "../../pdf",
+    "NB_TOKENS": 100,
+    "SPLIT": "True",
+    "NB_PROCESS": 2,
+    "PICKLE_PATH": "results/pickle_model_keyword",
+    "BOOKS_CORPUS_PATH" : "data/book_corpus/books_large.txt",
+    "BOOK_ENCRYPTION_PATH" : "data/book_trends_cybsec/Trends in Data Protection and Encryption.txt",
+
+    "CROSS_CORRELATION": {
+        "FILE_NAME_RESULT": "results/model_correlation_",
+        "CATEGORY": "CR"
+    },
+
+    "MANIFOLD": {
+        "STORE_PICKLE_PATH": "results/pickle_manifold/store",
+        "MANIFOLD_PATH": "results/manifolds",
+        "SUB_SAMPLE_RATE": 1,
+
+        "CATEGORIES_TO_NAME": {
+            "AI": "cs.AI: Artificial Intelligence",
+            "CL": "cs.CL: Computation and Language",
+            "CC": "cs.CC: Computational Complexity",
+            "CE": "cs.CE: Computational Engineering, Finance, and Science",
+            "CG": "cs.CG: Computational Geometry",
+            "GT": "cs.GT: Computer Science and Game Theory",
+            "CV": "cs.CV: Computer Vision and Pattern Recognition",
+            "CY": "cs.CY: Computers and Society",
+            "CR": "cs.CR: Cryptography and Security",
+            "DS": "cs.DS: Data Structures and Algorithms",
+            "DB": "cs.DB: Databases",
+            "DL": "cs.DL: Digital Libraries",
+            "DM": "cs.DM: Discrete Mathematics",
+            "DC": "cs.DC: Distributed, Parallel, and Cluster Computing",
+            "ET": "cs.ET: Emerging Technologies",
+            "FL": "cs.FL: Formal Languages and Automata Theory",
+            "GL": "cs.GL: General Literature",
+            "GR": "cs.GR: Graphics",
+            "AR": "cs.AR: Hardware Architecture",
+            "HC": "cs.HC: Human-Computer Interaction",
+            "IR": "cs.IR: Information Retrieval",
+            "IT": "cs.IT: Information Theory",
+            "LO": "cs.LO: Logic in Computer Science",
+            "LG": "cs.LG: Machine Learning",
+            "MS": "cs.MS: Mathematical Software",
+            "MA": "cs.MA: Multiagent Systems",
+            "MM": "cs.MM: Multimedia",
+            "NI": "cs.NI: Networking and Internet Architecture",
+            "NE": "cs.NE: Neural and Evolutionary Computing",
+            "NA": "cs.NA: Numerical Analysis",
+            "OS": "cs.OS: Operating Systems",
+            "OH": "cs.OH: Other Computer Science",
+            "PF": "cs.PF: Performance",
+            "PL": "cs.PL: Programming Languages",
+            "RO": "cs.RO: Robotics",
+            "SI": "cs.SI: Social and Information Networks",
+            "SE": "cs.SE: Software Engineering",
+            "SD": "cs.SD: Sound",
+            "SC": "cs.SC: Symbolic Computation",
+            "SY": "cs.SY: Systems and Control",
+            "none": "Category not found"
+        }
+    },
+
+    "MODEL_NAME_TO_TEXT": {
+        "yake": "Yake (KPE)",
+        "keybert": "KeyBERT (KPE)",
+        "en_core_web_lg": "Spacy-large OntoNotes5 (NnE)",
+        "en_core_web_trf": "Spacy-transformer OntoNotes5 (NnE)",
+        "hugging_bhadresh-savani_electra-base-discriminator-finetuned-conll03-english": "Electra-base conll03 (NER)",
+        "hugging_browndw_docusco-bert": "BERT COCA-docusco (TokC)",
+        "hugging_yanekyuk_bert-uncased-keyword-extractor": "BERT-base-uncased (KPE)",
+        "hugging_yanekyuk_bert-uncased-keyword-discriminator": "BERT-base-uncased (NER + CON R)",
+        "hugging_Jorgeutd_bert-large-uncased-finetuned-ner": "BERT-large-uncased conll03 (NER)",
+        "hugging_dslim_bert-large-NER": "BERT-large-cased conll03 (NER)",
+        "hugging_elastic_distilbert-base-uncased-finetuned-conll03-english": "DistilBERT-base-uncased conll03 (NER)",
+        "hugging_Jean-Baptiste_roberta-large-ner-english": "RoBERTa-large conll03 (NER)",
+        "hugging_asahi417_tner-xlm-roberta-base-ontonotes5": "XLM-RoBERTa-base OntoNotes5 (NER + NUM)",
+        "hugging_xlm-roberta-large-finetuned-conll03-english": "XLM-RoBERTa-large conll03 (NER)",
+        "hugging_ml6team_keyphrase-extraction-kbir-kpcrowd": "KBIR kpcrowd (KPE)",
+        "hugging_ml6team_keyphrase-extraction-kbir-inspec": "KBIR inspec (KPE)"
+    },
+
+    "WORD_WEIGHT_CONNECTION": {
+        "FILE_NAME_RESULT": "data/word_weighted_connection/",
+        "CHUNK_SIZE": 99000,
+        "NB_WORKERS": 1
+    }
+}
