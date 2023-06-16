@@ -401,7 +401,7 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
         for cat1, data1 in cats_data.items():
             line = []
             for cat2, data2 in cats_data.items():
-                score = np.linalg.norm((data1[0] - data2[0]) / np.sqrt(data1[3]**2 + data2[3]**2) * 2)
+                score = np.linalg.norm((data1[0] - data2[0]) / np.sqrt(data1[2]**2 + data2[2]**2) * 2)
                 line.append(score)
             clust_coeff.append(line)
         print(f"End calculating clust_coeff: {time.time() - start_time}", flush=True)
