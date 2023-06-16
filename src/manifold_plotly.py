@@ -393,7 +393,7 @@ def manifold_plotting(active_savepath, embedding_model_name, pickle_data):
                 CATEGORY_TO_NAME,
             )
             fig.update_layout(
-                title=f'2d manifold with {manifold["name"]} model embedded with {embedding_model_name} using {CONFIG["MODEL_NAME_TO_TEXT"]["_".join(ext_model_name.split("_")[:-2])]}'
+                title=f'{manifold["name"]} 2D Projection of {embedding_model_name} using {CONFIG["MODEL_NAME_TO_TEXT"]["_".join(ext_model_name.split("_")[:-2])]}'
             )
             fig.update_layout(plot_bgcolor="white")
             fig.update_xaxes(

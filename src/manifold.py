@@ -313,10 +313,10 @@ def get_centroid(data):
     Returns:
         np.array: centroid of the vectors
     """
-    return np.median(data, axis=0), np.std(data, axis=0)
+    return np.mean(data, axis=0), np.std(data, axis=0)
 
 
-def mean_distance(data, centroid):
+def median_distance(data, centroid):
     """Calculate the mean distance between the vectors and the centroid
 
     Parameters:
@@ -394,17 +394,15 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
         for cat, cat_data in vect_keywords_per_ext.items():
             cat_data = subsample(cat_data, 0.8)
             centroid, cent_std = get_centroid(cat_data)
-            cat_dist, cat_std = mean_distance(cat_data, centroid)
+            cat_dist, cat_std = median_distance(cat_data, centroid)
             cats_data[cat] = (centroid, cent_std, cat_dist, cat_std)
 
         clust_coeff = []
         for cat1, data1 in cats_data.items():
             line = []
             for cat2, data2 in cats_data.items():
-                score = (data1[2] + data2[2]) / pairwise_distance(
-                    data1[0], data1[3], data2[0], data2[3]
-                )
-                line.append(min(score, 100))
+                score = np.linalg.norm((data1[0] - data2[0]) / np.sqrt(data1[3]**2 + data2[3]**2) * 2)
+                line.append(score)
             clust_coeff.append(line)
         print(f"End calculating clust_coeff: {time.time() - start_time}", flush=True)
 
@@ -435,7 +433,7 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
         g.ax_heatmap.collections[0].set_array(new_values)
         g.ax_col_dendrogram.set_visible(False)
         g.ax_heatmap.set_title(
-            f"{embedding_model_name} 2D Projection of\n {CONFIG['MODEL_NAME_TO_TEXT']['_'.join(ext_model_name.split('_')[:-2])]}"
+            f"Cluster coefficient using {embedding_model_name} extract with\n {CONFIG['MODEL_NAME_TO_TEXT']['_'.join(ext_model_name.split('_')[:-2])]}"
         )
 
         plt.subplots_adjust(top=1.12, bottom=0.15)
