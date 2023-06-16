@@ -340,7 +340,7 @@ def pairwise_distance(cat_cent, cat_std, rem_cent, rem_std):
     Returns:
         np.array: pairwise distance between the two sets of vectors
     """
-    return np.sqrt(cat_std**2 + rem_std**2) / distance(cat_cent, rem_cent)
+    return distance(cat_cent, rem_cent) / np.sqrt(cat_std**2 + rem_std**2)
 
 
 def remove_outliers_on_graph(data, axis):
@@ -392,7 +392,7 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
         print("Start calculating clust_coeff", flush=True)
         cats_data = dict()
         for cat, cat_data in vect_keywords_per_ext.items():
-            cat_data = subsample(cat_data, 0.5)
+            cat_data = subsample(cat_data, 0.8)
             centroid, cent_std = get_centroid(cat_data)
             cat_dist, cat_std = mean_distance(cat_data, centroid)
             cats_data[cat] = (centroid, cent_std, cat_dist, cat_std)
@@ -401,12 +401,10 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
         for cat1, data1 in cats_data.items():
             line = []
             for cat2, data2 in cats_data.items():
-                line.append(
-                    data1[2]
-                    / pairwise_distance(
-                        data1[0], data1[3], data2[0], data2[3]
-                    )
+                score = (data1[2] + data2[2]) / pairwise_distance(
+                    data1[0], data1[3], data2[0], data2[3]
                 )
+                line.append(min(score, 100))
             clust_coeff.append(line)
         print(f"End calculating clust_coeff: {time.time() - start_time}", flush=True)
 
@@ -427,17 +425,17 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
             yticklabels=labels_long,
             xticklabels=labels_short,
             cbar_pos=(0.03, 0.03, 0.04, 0.15),
-            vmin=0.65,
-            vmax=0.75,
+            # vmin=0.65,
+            # vmax=0.75,
         )
 
         mask = np.triu(np.ones_like(clust_coeff))
         values = g.ax_heatmap.collections[0].get_array().reshape(clust_coeff.shape)
-        new_values = np.ma.array(values, mask=mask)
+        new_values = np.ma.array(values, mask=mask)  
         g.ax_heatmap.collections[0].set_array(new_values)
         g.ax_col_dendrogram.set_visible(False)
         g.ax_heatmap.set_title(
-            f"Cluster coefficient using {embedding_model_name}, extract\n with {CONFIG['MODEL_NAME_TO_TEXT']['_'.join(ext_model_name.split('_')[:-2])]}"
+            f"{embedding_model_name} 2D Projection of\n {CONFIG['MODEL_NAME_TO_TEXT']['_'.join(ext_model_name.split('_')[:-2])]}"
         )
 
         plt.subplots_adjust(top=1.12, bottom=0.15)
