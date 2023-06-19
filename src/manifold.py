@@ -423,8 +423,8 @@ def plot_cluster_coefs(active_savepath, embedding_model_name, data, category_to_
             yticklabels=labels_long,
             xticklabels=labels_short,
             cbar_pos=(0.03, 0.03, 0.04, 0.15),
-            # vmin=0.65,
-            # vmax=0.75,
+            vmin=0.0,
+            vmax=0.45,
         )
 
         mask = np.triu(np.ones_like(clust_coeff))
