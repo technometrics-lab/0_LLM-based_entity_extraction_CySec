@@ -532,7 +532,7 @@ def manifold_plotting(active_savepath, embedding_model_name, pickle_data):
 
         # configure the genral plot parameters
         handles, labels = ax[0, 0].get_legend_handles_labels()
-        fig.suptitle(f'2d manifold with {manifold["name"]} model', fontweight="bold")
+        fig.suptitle(f'{manifold["name"]} 2D Projection of {embedding_model_name} Word Embedding', fontweight="bold")
         fig.legend(
             handles,
             labels,
