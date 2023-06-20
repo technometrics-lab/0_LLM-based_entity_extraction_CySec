@@ -1,0 +1,19 @@
+bertopic==0.14.1
+en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl#sha256=c8ac64840c1eb3e3ca7bd38bd1e1c48fb0faeb2449d54d01d5ce629af4595775
+en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.5.0/en_core_web_trf-3.5.0-py3-none-any.whl#sha256=8902305d2ced83d98a8e88efd93ea8970a70dda9bb24b0024a8b798d1cc913d5
+gensim==4.3.1
+keybert==0.7.0
+keyphrase-vectorizers==0.0.11
+keyphrasetransformer==0.0.2
+lsg-converter==0.0.5
+matplotlib==3.7.1
+protobuf==3.20.0
+PyMuPDF==1.22.2
+scikit-learn==1.2.2
+seaborn==0.12.2
+spacy==3.5.2
+torch==2.0.0
+tqdm==4.65.
+transformers==4.28.1
+umap-learn==0.5.3
+yake==0.4.8
